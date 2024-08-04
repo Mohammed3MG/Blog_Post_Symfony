@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -35,6 +37,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    /**
+     * @var Collection<int, Blogs>
+     */
+    #[ORM\OneToMany(targetEntity: Blogs::class, mappedBy: 'BlogUser')]
+    private Collection $blogs;
+
+    public function __construct()
+    {
+        $this->blogs = new ArrayCollection();
+    }
+
 
     public function getId(): ?int
     {
@@ -120,4 +134,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->user = $user;
     }
+
+    /**
+     * @return Collection<int, Blogs>
+     */
+    public function getBlogs(): Collection
+    {
+        return $this->blogs;
+    }
+
+    public function addBlog(Blogs $blog): static
+    {
+        if (!$this->blogs->contains($blog)) {
+            $this->blogs->add($blog);
+            $blog->setBlogUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBlog(Blogs $blog): static
+    {
+        if ($this->blogs->removeElement($blog)) {
+            // set the owning side to null (unless already changed)
+            if ($blog->getBlogUser() === $this) {
+                $blog->setBlogUser(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

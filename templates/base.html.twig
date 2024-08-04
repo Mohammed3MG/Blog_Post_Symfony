@@ -23,8 +23,8 @@
             </div>
             <!-- SPACER -->
             <div class = "grow h-full flex items-center justify-center"></div>
-            <div class = "flex-none h-full text-center flex items-center justify-center">
 
+            <div class = "flex-none h-full text-center flex items-center justify-center">
                 <div class = "flex space-x-3 items-center px-3">
                     <div class = "flex-none flex justify-center">
                         <div class="w-8 h-8 flex ">
@@ -32,10 +32,14 @@
                         </div>
                     </div>
 
-                    <div class = "hidden md:block text-sm md:text-md text-black dark:text-white">Mohammed Surguli</div>
+                    <div class = "hidden md:block text-sm md:text-md text-black dark:text-white">
+                        {% if app.user %}
+                            {{ app.user.user }}
+                        {% endif %}
+                    </div>
                 </div>
-
             </div>
+
         </div>
         <aside class = "w-60 -translate-x-48 fixed transition transform ease-in-out duration-1000 z-50 flex h-screen bg-[#1E293B] ">
             <!-- open sidebar button -->
@@ -122,6 +126,7 @@
         </aside>
         <!-- CONTENT -->
         <div class = "content ml-12 transform ease-in-out duration-500 pt-20 px-2 md:px-5 pb-4 ">
+
             {% block body %}
             {% embed 'sidebar.html.twig' %}
             {% block container %}{% endblock %}
