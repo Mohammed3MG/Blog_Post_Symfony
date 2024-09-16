@@ -1,4 +1,4 @@
-name: Symfony CI
+name: Symfony
 
 on:
   push:
@@ -10,70 +10,41 @@ permissions:
   contents: read
 
 jobs:
-  symfony-ci:
+  symfony-tests:
     runs-on: ubuntu-latest
-    
     steps:
-      # Check out the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Set up PHP with required extensions
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2cb9b829437ee246e9b3cac53555a39208ca6d28
         with:
-          php-version: '8.3' # Use the latest PHP version
-          extensions: mbstring, intl, pdo, pdo_mysql, pdo_sqlite
-          tools: composer, symfony
-          coverage: none  # Optional if you plan to collect coverage reports
+          php-version: '8.3.8'
 
-      # Cache composer dependencies
-      - name: Cache Composer dependencies
-        uses: actions/cache@v3
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+      - name: Install Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-      # Install dependencies
-      - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
-
-      # Cache npm dependencies (optional)
-      - name: Cache npm dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      # Install node dependencies and run asset build (optional for front-end apps)
-      - name: Install and build assets
+      - name: Create Database
         run: |
-          npm install
-          npm run build
+          mkdir -p data
+          touch data/database.sqlite
 
-      # Run Symfony Tests via PHPUnit
-      - name: Run PHPUnit tests
-        run: ./vendor/bin/phpunit --testdox --coverage-text
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
+        env:
+          DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
+        run: vendor/bin/phpunit
 
-      # Optionally, build and push Docker images (if needed for deployment)
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+      - name: Build and Push Docker Image
+        uses: mr-smithers-excellent/docker-build-push@v6
         with:
-          context: .
-          push: true
-          tags: mohammed3mg/symfony_blogpost:latest
-          secrets: |
-            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-            DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
+          image: mohammed3mg/symfony_blogpost
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Optionally, you can upload coverage reports or any test artifacts
-      - name: Upload test artifacts
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: phpunit-report
-          path: ./tests/phpunit-report.xml
+      - name: Set up Docker Compose
+        run: | 
+          docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
+      
+      - name: Run Tests
+        run: |
+          docker-compose exec -T app vendor/bin/phpunit
