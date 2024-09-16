@@ -40,11 +40,6 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
 
-      - name: Prepare environment
-        run: |
-          php bin/console doctrine:database:create --env=test || true
-          php bin/console doctrine:schema:update --force --env=test
-
       # Cache npm dependencies (optional)
       - name: Cache npm dependencies
         uses: actions/cache@v3
