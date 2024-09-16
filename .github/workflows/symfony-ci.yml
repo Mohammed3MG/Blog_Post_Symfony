@@ -1,4 +1,4 @@
-name: Symfony CI
+name: Symfony CI YAML
 
 on:
   push:
@@ -29,7 +29,8 @@ jobs:
 
       - name: Install Docker Compose
         run: |
-          DOCKER_COMPOSE_VERSION=2.19.1
+          DOCKER_COMPOSE_VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)
+          export DOCKER_COMPOSE_VERSION
           sudo curl -L "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version  # Verify Docker Compose installation
