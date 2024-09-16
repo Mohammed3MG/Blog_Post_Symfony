@@ -43,21 +43,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: List directory contents
+        run: ls -la
+
       - name: Set up Docker Compose
         run: |
           docker-compose -f docker-compose.yml up -d
-
+          
       - name: Wait for services to be ready
         run: |
-          for i in {1..30}; do
-            if docker-compose exec -T app bin/console doctrine:schema:create; then
-              exit 0
-            else
-              echo "Waiting for services to be ready..."
-              sleep 10
-            fi
-          done
-          exit 1
+          docker-compose exec -T app sh -c 'until nc -z db 3306; do sleep 5; done'
 
       - name: Run PHPUnit Tests
         run: |
