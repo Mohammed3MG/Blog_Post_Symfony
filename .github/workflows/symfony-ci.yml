@@ -52,3 +52,11 @@ jobs:
         registry: docker.io
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Set up Docker Compose
+      run: | 
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
+    - name: Run Tests
+      run: |
+        docker-compose exec -T app vendor/bin/phpunit
+
