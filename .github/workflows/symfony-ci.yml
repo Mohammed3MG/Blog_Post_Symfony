@@ -45,19 +45,19 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          docker-compose -f docker-compose.yaml -f compose.override.yaml up -d
+          docker-compose -f docker-compose.yml up -d
 
-      - name: Verify Docker Compose Status
+      - name: Wait for services to be ready
         run: |
-          docker-compose ps
-
-      - name: View Docker Container Logs
-        run: |
-          docker-compose logs
-
-      - name: Create Database Schema
-        run: |
-          docker-compose exec -T app bin/console doctrine:schema:create
+          for i in {1..30}; do
+            if docker-compose exec -T app bin/console doctrine:schema:create; then
+              exit 0
+            else
+              echo "Waiting for services to be ready..."
+              sleep 10
+            fi
+          done
+          exit 1
 
       - name: Run PHPUnit Tests
         run: |
