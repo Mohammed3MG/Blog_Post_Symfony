@@ -1,30 +1,10 @@
-version: '3.8'
-
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
     environment:
-      APP_ENV: dev
-      APP_SECRET: 126ea28967aebd72ab90c2f2ca33bb0a
-      DATABASE_URL: mysql://root:root@db:3306/blogpost?serverVersion=8.0.32&charset=utf8mb4
-    volumes:
-      - .:/var/www/html
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
+      # You can add or override environment variables here
+      SOME_OTHER_ENV_VAR: value
 
   db:
-    image: mysql:8.0
+    # You can add or override configurations for the db service here
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: blogpost
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-    volumes:
-      - mysql-data:/var/lib/mysql
-
-volumes:
-  mysql-data:
+      MYSQL_ROOT_PASSWORD: new_root_password

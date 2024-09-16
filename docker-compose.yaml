@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: dev
+      APP_SECRET: 126ea28967aebd72ab90c2f2ca33bb0a
+      DATABASE_URL: mysql://symfony:symfony_password@db:3306/blogpost?serverVersion=8.0.32&charset=utf8mb4
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blogpost
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
