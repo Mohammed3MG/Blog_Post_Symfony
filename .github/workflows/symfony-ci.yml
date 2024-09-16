@@ -47,6 +47,14 @@ jobs:
         run: |
           docker-compose -f docker-compose.yaml -f compose.override.yaml up -d
 
+      - name: Verify Docker Compose Status
+        run: |
+          docker-compose ps
+
+      - name: View Docker Container Logs
+        run: |
+          docker-compose logs
+
       - name: Create Database Schema
         run: |
           docker-compose exec -T app bin/console doctrine:schema:create
