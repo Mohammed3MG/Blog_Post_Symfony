@@ -1,4 +1,4 @@
-name: Symfony
+name: Symfony CI
 
 on:
   push:
@@ -10,41 +10,53 @@ permissions:
   contents: read
 
 jobs:
-  symfony-tests:
+  symfony-ci:
     runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: sqlite:///%kernel.project_dir%/var/data.db
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: > 
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@2cb9b829437ee246e9b3cac53555a39208ca6d28
+      - name: Set up PHP with Xdebug
+        uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3.8'
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo, pdo_mysql, pdo_sqlite, xdebug # Add xdebug for coverage
+          tools: composer, symfony
 
-      - name: Install Dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-      - name: Create Database
-        run: |
-          mkdir -p data
-          touch data/database.sqlite
-
-      - name: Execute tests (Unit and Feature tests) via PHPUnit
-        env:
-          DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
-        run: vendor/bin/phpunit
-
-      - name: Build and Push Docker Image
-        uses: mr-smithers-excellent/docker-build-push@v6
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
         with:
-          image: mohammed3mg/symfony_blogpost
-          registry: docker.io
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
-      - name: Set up Docker Compose
-        run: | 
-          docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up -d
-      
-      - name: Run Tests
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
+
+      - name: Prepare environment
         run: |
-          docker-compose exec -T app vendor/bin/phpunit
+          php bin/console doctrine:database:create --env=test || true
+          php bin/console doctrine:schema:update --force --env=test
+
+      - name: Run PHPUnit tests with coverage
+        run: |
+          ./vendor/bin/phpunit --testdox --coverage-text
