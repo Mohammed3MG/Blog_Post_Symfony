@@ -45,3 +45,10 @@ jobs:
       env:
         DATABASE_URL: sqlite:///%kernel.project_dir%/data/database.sqlite
       run: vendor/bin/phpunit
+    - name: Build and Push  Docker Image
+      uses: mr-smithers-excellent/docker-build-push@v6
+      with:
+        image: mohammed3mg/symfony_blogpost
+        registry: docker.io
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
