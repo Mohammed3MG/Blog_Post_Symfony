@@ -13,24 +13,6 @@ jobs:
   symfony-ci:
     runs-on: ubuntu-latest
     
-    env:
-      APP_ENV: test
-      DATABASE_URL: sqlite:///%kernel.project_dir%/var/data.db
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: blogpost
-        ports:
-          - 3306:3306
-        options: > 
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
       # Check out the repository
       - name: Checkout code
@@ -58,7 +40,6 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --no-scripts
 
-      # Run Symfony console commands
       - name: Prepare environment
         run: |
           php bin/console doctrine:database:create --env=test || true
